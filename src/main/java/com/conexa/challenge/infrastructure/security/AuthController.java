@@ -43,9 +43,11 @@ public class AuthController {
                     message = "must have 3 to 50 characters: letters, digits, '.', '_' or '-'")
             String username,
 
+            // Solo ASCII: así 72 caracteres son 72 bytes, el máximo que acepta BCrypt.
             @NotBlank(message = "is required")
-            @Size(min = 8, message = "must have at least 8 characters")
-            @MaxBytes(value = 72, message = "is too long (max 72 bytes)")
+            @Size(min = 8, max = 72, message = "must have between 8 and 72 characters")
+            @Pattern(regexp = "^[\\x20-\\x7E]*$",
+                    message = "may only contain letters, digits, spaces and symbols (no accents or emojis)")
             String password) {
     }
 

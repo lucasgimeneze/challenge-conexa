@@ -64,7 +64,7 @@ class AuthControllerIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.username")
                         .value("must have 3 to 50 characters: letters, digits, '.', '_' or '-'"))
-                .andExpect(jsonPath("$.errors.password").value("must have at least 8 characters"))
+                .andExpect(jsonPath("$.errors.password").value("must have between 8 and 72 characters"))
                 .andExpect(jsonPath("$..rejectedValue").isEmpty());
     }
 
@@ -76,12 +76,23 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void registerRejectsPasswordLongerThan72BytesEvenIfUnder72Characters() throws Exception {
-        String password = "ñ".repeat(40); // 40 caracteres, 80 bytes en UTF-8
-
-        register("leia", password)
+    void registerRejectsPasswordLongerThan72Characters() throws Exception {
+        register("leia", "a".repeat(73))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors.password").value("is too long (max 72 bytes)"));
+                .andExpect(jsonPath("$.errors.password").value("must have between 8 and 72 characters"));
+    }
+
+    @Test
+    void registerRejectsNonAsciiPassword() throws Exception {
+        register("leia", "contraseña123")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password")
+                        .value("may only contain letters, digits, spaces and symbols (no accents or emojis)"));
+    }
+
+    @Test
+    void registerAcceptsPasswordOfExactly72AsciiCharacters() throws Exception {
+        register("leia", "a".repeat(72)).andExpect(status().isCreated());
     }
 
     @Test
