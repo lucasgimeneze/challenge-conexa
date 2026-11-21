@@ -11,8 +11,8 @@ import java.lang.annotation.Target;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Limita el largo de un String en bytes UTF-8 (no en caracteres).
- * Necesario para contraseñas: BCrypt rechaza más de 72 bytes, y un carácter como 'ñ' ocupa 2.
+ * Limita el largo en bytes UTF-8, no en caracteres: BCrypt rechaza más de 72 bytes
+ * y un carácter como 'ñ' ocupa 2.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

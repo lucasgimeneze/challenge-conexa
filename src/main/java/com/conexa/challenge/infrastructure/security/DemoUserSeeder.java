@@ -9,7 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 /**
- * Registra el usuario demo al arrancar usando el mismo flujo que {@code /auth/register}.
+ * Los usuarios viven en memoria y se pierden al reiniciar: este usuario permite probar la API
+ * sin registrarse. Usa el mismo flujo que {@code /auth/register}.
  */
 @Component
 @ConditionalOnBooleanProperty("auth.demo-user.enabled")

@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,7 +24,7 @@ class JwtTokenProviderTest {
 
     @Test
     void issuesSignedTokenWithUserIdAsSubjectAndConfiguredExpiration() {
-        Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
         JwtTokenProvider provider = new JwtTokenProvider(
                 securityConfig.jwtEncoder(PROPERTIES), PROPERTIES, Clock.fixed(now, ZoneOffset.UTC));
         User user = new User(UUID.randomUUID(), "luke", "hash");

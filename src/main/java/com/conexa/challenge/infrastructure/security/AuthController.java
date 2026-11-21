@@ -37,9 +37,6 @@ public class AuthController {
         return new TokenResponse(token.value(), "Bearer", token.expiresInSeconds());
     }
 
-    /**
-     * La contraseña se limita a 72 bytes (no caracteres) porque es el máximo que acepta BCrypt.
-     */
     public record RegisterRequest(
             @NotBlank(message = "is required")
             @Pattern(regexp = "^[A-Za-z0-9._-]{3,50}$",

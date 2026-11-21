@@ -8,16 +8,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Repository;
 
-/**
- * Repositorio en memoria: los usuarios se pierden al reiniciar la aplicación.
- * <p>
- * El mapa está indexado por username porque es la única búsqueda (login): la clave del mapa
- * cumple el rol de índice único. En un adapter JPA equivaldría a {@code @Id UUID id} +
- * {@code @Column(unique = true)} indexado sobre username.
- */
 @Repository
 public class InMemoryUserRepository implements UserRepository {
 
+    // Indexado por username (la búsqueda del login): la clave del mapa funciona como índice único.
     private final Map<String, User> usersByUsername = new ConcurrentHashMap<>();
 
     @Override
@@ -27,7 +21,7 @@ public class InMemoryUserRepository implements UserRepository {
 
     @Override
     public User save(User user) {
-        // putIfAbsent es atómico: evita que dos registros concurrentes con el mismo username se pisen.
+        // putIfAbsent es atómico: dos registros concurrentes con el mismo username no se pisan.
         User existing = usersByUsername.putIfAbsent(user.username(), user);
         if (existing != null) {
             throw new UserAlreadyExistsException(user.username());

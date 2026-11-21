@@ -7,6 +7,7 @@ import com.conexa.challenge.domain.exception.UserAlreadyExistsException;
 import com.conexa.challenge.domain.model.User;
 import com.conexa.challenge.infrastructure.adapter.out.persistence.InMemoryUserRepository;
 import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
+import java.time.Clock;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,7 +22,7 @@ class AuthServiceTest {
     private final InMemoryUserRepository userRepository = new InMemoryUserRepository();
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final JwtTokenProvider tokenProvider =
-            new JwtTokenProvider(new SecurityConfig().jwtEncoder(PROPERTIES), PROPERTIES);
+            new JwtTokenProvider(new SecurityConfig().jwtEncoder(PROPERTIES), PROPERTIES, Clock.systemUTC());
     private final AuthService authService = new AuthService(userRepository, passwordEncoder, tokenProvider);
 
     @Test

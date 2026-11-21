@@ -8,8 +8,8 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan
 public class ConexaChallengeApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ConexaChallengeApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ConexaChallengeApplication.class, args);
+    }
 
 }

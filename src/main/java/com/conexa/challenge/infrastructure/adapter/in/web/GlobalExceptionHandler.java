@@ -16,10 +16,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-/**
- * Traduce excepciones a respuestas {@link ProblemDetail} (RFC 9457).
- * Los errores estándar de Spring MVC (body inválido, método no soportado, etc.) los resuelve la clase base.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -33,9 +29,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
-    /**
-     * Agrega qué campo falló y por qué. Nunca incluye el valor enviado: podría ser una contraseña.
-     */
+    // Solo campo y mensaje: nunca el valor enviado, porque podría ser una contraseña.
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
