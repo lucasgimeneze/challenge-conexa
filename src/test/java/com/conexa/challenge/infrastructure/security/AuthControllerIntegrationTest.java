@@ -29,6 +29,7 @@ class AuthControllerIntegrationTest {
 
     // Ruta protegida cualquiera: todavía no hay endpoints de negocio.
     private static final String PROTECTED_PATH = "/people";
+    private static final String PASSWORD = "skywalker123";
 
     @Autowired
     private MockMvc mockMvc;
@@ -96,8 +97,10 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void loginReturnsBearerTokenForDemoUser() throws Exception {
-        login("demo-test", "demo-test-pass")
+    void loginReturnsBearerTokenForRegisteredUser() throws Exception {
+        String username = registerNewUser();
+
+        login(username, PASSWORD)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.tokenType").value("Bearer"))
@@ -106,7 +109,9 @@ class AuthControllerIntegrationTest {
 
     @Test
     void loginReturnsUnauthorizedForWrongPassword() throws Exception {
-        login("demo-test", "wrong-password")
+        String username = registerNewUser();
+
+        login(username, "wrong-password")
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.detail").value("Invalid username or password"));
     }
@@ -134,12 +139,19 @@ class AuthControllerIntegrationTest {
 
     @Test
     void protectedRouteAcceptsValidToken() throws Exception {
-        String body = login("demo-test", "demo-test-pass").andReturn().getResponse().getContentAsString();
+        String body = login(registerNewUser(), PASSWORD).andReturn().getResponse().getContentAsString();
         String token = JsonPath.read(body, "$.accessToken");
 
         // 404 (y no 401) prueba que el request pasó el filtro de seguridad y llegó al dispatcher.
         mockMvc.perform(get(PROTECTED_PATH).header("Authorization", "Bearer " + token))
                 .andExpect(status().isNotFound());
+    }
+
+    // El repositorio en memoria se comparte entre tests: cada uno usa un username propio.
+    private String registerNewUser() throws Exception {
+        String username = "user-" + UUID.randomUUID().toString().substring(0, 8);
+        register(username, PASSWORD).andExpect(status().isCreated());
+        return username;
     }
 
     private ResultActions register(String username, String password) throws Exception {

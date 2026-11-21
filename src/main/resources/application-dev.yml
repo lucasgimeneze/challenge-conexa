@@ -1,9 +1,0 @@
-# Perfil de desarrollo (activo por defecto): permite clonar y correr sin configurar nada.
-# Estos valores son públicos: no usar este perfil en un entorno expuesto.
-auth:
-  jwt:
-    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
-  demo-user:
-    enabled: ${DEMO_USER_ENABLED:true}
-    username: ${DEMO_USERNAME:demo}
-    password: ${DEMO_PASSWORD:demo1234}

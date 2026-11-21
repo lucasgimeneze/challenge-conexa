@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import javax.crypto.SecretKey;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -16,17 +17,17 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 class JwtTokenProviderTest {
 
     private static final AuthProperties PROPERTIES = new AuthProperties(
-            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofHours(1)),
-            new AuthProperties.DemoUser(false, null, null));
+            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofHours(1)));
 
     private final SecurityConfig securityConfig = new SecurityConfig();
-    private final JwtDecoder decoder = securityConfig.jwtDecoder(PROPERTIES);
+    private final SecretKey signingKey = securityConfig.jwtSigningKey(PROPERTIES);
+    private final JwtDecoder decoder = securityConfig.jwtDecoder(signingKey);
 
     @Test
     void issuesSignedTokenWithUserIdAsSubjectAndConfiguredExpiration() {
         Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
         JwtTokenProvider provider = new JwtTokenProvider(
-                securityConfig.jwtEncoder(PROPERTIES), PROPERTIES, Clock.fixed(now, ZoneOffset.UTC));
+                securityConfig.jwtEncoder(signingKey), PROPERTIES, Clock.fixed(now, ZoneOffset.UTC));
         User user = new User(UUID.randomUUID(), "luke", "hash");
 
         JwtTokenProvider.AccessToken token = provider.issue(user);

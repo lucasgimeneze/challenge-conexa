@@ -2,9 +2,12 @@ package com.conexa.challenge.infrastructure.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Clock;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -22,6 +25,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private static final String[] PUBLIC_PATHS = {
             "/auth/**",
@@ -54,19 +59,31 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtEncoder jwtEncoder(AuthProperties properties) {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey(properties)));
+    SecretKey jwtSigningKey(AuthProperties properties) {
+        if (properties.jwt().hasSecret()) {
+            return hmacKey(properties.jwt().secret().getBytes(StandardCharsets.UTF_8));
+        }
+        log.warn("JWT_SECRET is not set: using an ephemeral random key (development only). "
+                + "Tokens won't survive a restart nor be shared across instances. "
+                + "In a real environment inject JWT_SECRET from a secrets manager.");
+        byte[] randomKey = new byte[32];
+        new SecureRandom().nextBytes(randomKey);
+        return hmacKey(randomKey);
     }
 
     @Bean
-    JwtDecoder jwtDecoder(AuthProperties properties) {
-        return NimbusJwtDecoder.withSecretKey(secretKey(properties))
+    JwtEncoder jwtEncoder(SecretKey jwtSigningKey) {
+        return new NimbusJwtEncoder(new ImmutableSecret<>(jwtSigningKey));
+    }
+
+    @Bean
+    JwtDecoder jwtDecoder(SecretKey jwtSigningKey) {
+        return NimbusJwtDecoder.withSecretKey(jwtSigningKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
     }
 
-    private static SecretKey secretKey(AuthProperties properties) {
-        byte[] secret = properties.jwt().secret().getBytes(StandardCharsets.UTF_8);
-        return new SecretKeySpec(secret, "HmacSHA256");
+    private static SecretKey hmacKey(byte[] key) {
+        return new SecretKeySpec(key, "HmacSHA256");
     }
 }

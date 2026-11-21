@@ -1,10 +1,6 @@
 spring:
   application:
     name: conexa-challenge
-  profiles:
-    # Sin SPRING_PROFILES_ACTIVE arranca en dev (secreto y usuario demo de desarrollo).
-    # En cualquier otro perfil JWT_SECRET es obligatorio y el usuario demo está apagado.
-    default: dev
   cache:
     type: caffeine
     caffeine:
@@ -15,13 +11,13 @@ server:
 
 auth:
   jwt:
-    # Obligatorio (mínimo 32 bytes, HS256): sin JWT_SECRET la app no arranca.
+    # Clave de firma HS256 (mínimo 32 bytes). Nunca se versiona: en un entorno real se guarda en un
+    # gestor de secretos (AWS Secrets Manager, HashiCorp Vault, Kubernetes Secret o los secrets del
+    # pipeline de CI/CD) y se inyecta como variable de entorno JWT_SECRET al desplegar.
+    # Si no se define, la app genera una clave aleatoria en memoria al arrancar (solo para desarrollo):
+    # los tokens dejan de valer al reiniciar y no se comparten entre instancias.
     secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:1h}
-  demo-user:
-    enabled: ${DEMO_USER_ENABLED:false}
-    username: ${DEMO_USERNAME:}
-    password: ${DEMO_PASSWORD:}
 
 swapi:
   base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}

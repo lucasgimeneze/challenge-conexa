@@ -16,13 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class AuthServiceTest {
 
     private static final AuthProperties PROPERTIES = new AuthProperties(
-            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofMinutes(15)),
-            new AuthProperties.DemoUser(false, null, null));
+            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofMinutes(15)));
 
+    private final SecurityConfig securityConfig = new SecurityConfig();
     private final InMemoryUserRepository userRepository = new InMemoryUserRepository();
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final JwtTokenProvider tokenProvider =
-            new JwtTokenProvider(new SecurityConfig().jwtEncoder(PROPERTIES), PROPERTIES, Clock.systemUTC());
+    private final JwtTokenProvider tokenProvider = new JwtTokenProvider(
+            securityConfig.jwtEncoder(securityConfig.jwtSigningKey(PROPERTIES)), PROPERTIES, Clock.systemUTC());
     private final AuthService authService = new AuthService(userRepository, passwordEncoder, tokenProvider);
 
     @Test
