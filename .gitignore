@@ -35,3 +35,4 @@ build/
 ### Notas locales (no versionar) ###
 .github/CLAUDE.md
 .github/iteracion.md
+.claude/

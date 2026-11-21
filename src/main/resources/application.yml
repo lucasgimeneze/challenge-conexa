@@ -9,6 +9,16 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
 
+auth:
+  jwt:
+    # Solo para desarrollo: en cualquier otro entorno definir JWT_SECRET (mínimo 32 bytes, HS256).
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    expiration: ${JWT_EXPIRATION:1h}
+  demo-user:
+    enabled: ${DEMO_USER_ENABLED:true}
+    username: ${DEMO_USERNAME:demo}
+    password: ${DEMO_PASSWORD:demo1234}
+
 swapi:
   base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
   connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
