@@ -1,4 +1,4 @@
 /**
- * Adaptador de salida de persistencia: implementación JPA del repositorio de usuarios.
+ * Adaptador de salida de persistencia: repositorio de usuarios en memoria.
  */
 package com.conexa.challenge.infrastructure.adapter.out.persistence;
