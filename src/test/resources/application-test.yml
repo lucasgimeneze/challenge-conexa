@@ -1,0 +1,4 @@
+swapi:
+  base-url: http://localhost:${wiremock.server.port:8089}/api
+  connect-timeout: 1s
+  read-timeout: 1s

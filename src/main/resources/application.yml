@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: conexa-challenge
+  cache:
+    type: caffeine
+    caffeine:
+      spec: ${CACHE_SPEC:maximumSize=500,expireAfterWrite=10m}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+swapi:
+  base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
+  connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
+  read-timeout: ${SWAPI_READ_TIMEOUT:5s}
