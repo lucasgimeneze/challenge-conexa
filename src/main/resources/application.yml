@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: conexa-challenge
+  cache:
+    type: caffeine
+    caffeine:
+      spec: ${CACHE_SPEC:maximumSize=500,expireAfterWrite=10m}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+auth:
+  jwt:
+    # Clave de firma HS256 (mínimo 32 bytes). Nunca se versiona: en un entorno real se guarda en un
+    # gestor de secretos (AWS Secrets Manager, HashiCorp Vault, Kubernetes Secret o los secrets del
+    # pipeline de CI/CD) y se inyecta como variable de entorno JWT_SECRET al desplegar.
+    # Si no se define, la app genera una clave aleatoria en memoria al arrancar (solo para desarrollo):
+    # los tokens dejan de valer al reiniciar y no se comparten entre instancias.
+    secret: ${JWT_SECRET:}
+    expiration: ${JWT_EXPIRATION:1h}
+
+swapi:
+  base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
+  connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
+  read-timeout: ${SWAPI_READ_TIMEOUT:5s}
