@@ -4,6 +4,7 @@ import com.conexa.challenge.domain.model.User;
 import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -37,14 +38,23 @@ public class AuthController {
     }
 
     /**
-     * La contraseña tiene máximo 72 caracteres porque BCrypt ignora lo que excede 72 bytes.
+     * La contraseña se limita a 72 bytes (no caracteres) porque es el máximo que acepta BCrypt.
      */
     public record RegisterRequest(
-            @NotBlank @Size(min = 3, max = 50) String username,
-            @NotBlank @Size(min = 8, max = 72) String password) {
+            @NotBlank(message = "is required")
+            @Pattern(regexp = "^[A-Za-z0-9._-]{3,50}$",
+                    message = "must have 3 to 50 characters: letters, digits, '.', '_' or '-'")
+            String username,
+
+            @NotBlank(message = "is required")
+            @Size(min = 8, message = "must have at least 8 characters")
+            @MaxBytes(value = 72, message = "is too long (max 72 bytes)")
+            String password) {
     }
 
-    public record LoginRequest(@NotBlank String username, @NotBlank String password) {
+    public record LoginRequest(
+            @NotBlank(message = "is required") String username,
+            @NotBlank(message = "is required") String password) {
     }
 
     public record RegisterResponse(UUID id, String username) {

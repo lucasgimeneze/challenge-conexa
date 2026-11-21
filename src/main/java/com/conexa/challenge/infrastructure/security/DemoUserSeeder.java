@@ -6,6 +6,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 /**
  * Registra el usuario demo al arrancar usando el mismo flujo que {@code /auth/register}.
@@ -27,6 +28,9 @@ class DemoUserSeeder implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         AuthProperties.DemoUser demoUser = properties.demoUser();
+        Assert.hasText(demoUser.username(), "auth.demo-user.username (DEMO_USERNAME) is required when the demo user is enabled");
+        Assert.hasText(demoUser.password(), "auth.demo-user.password (DEMO_PASSWORD) is required when the demo user is enabled");
+
         authService.register(demoUser.username(), demoUser.password());
         log.info("Demo user '{}' registered", demoUser.username());
     }

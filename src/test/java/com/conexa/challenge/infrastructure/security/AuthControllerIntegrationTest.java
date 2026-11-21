@@ -1,17 +1,23 @@
 package com.conexa.challenge.infrastructure.security;
 
-import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.conexa.challenge.domain.model.User;
 import com.jayway.jsonpath.JsonPath;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -21,8 +27,17 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles("test")
 class AuthControllerIntegrationTest {
 
+    // Ruta protegida cualquiera: todavía no hay endpoints de negocio.
+    private static final String PROTECTED_PATH = "/people";
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JwtEncoder jwtEncoder;
+
+    @Autowired
+    private AuthProperties authProperties;
 
     @Test
     void registerReturnsCreatedWithoutExposingPassword() throws Exception {
@@ -44,8 +59,29 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void registerReturnsBadRequestForInvalidInput() throws Exception {
-        register("ab", "short").andExpect(status().isBadRequest());
+    void registerReportsInvalidFieldsWithoutEchoingValues() throws Exception {
+        register("ab", "short")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.username")
+                        .value("must have 3 to 50 characters: letters, digits, '.', '_' or '-'"))
+                .andExpect(jsonPath("$.errors.password").value("must have at least 8 characters"))
+                .andExpect(jsonPath("$..rejectedValue").isEmpty());
+    }
+
+    @Test
+    void registerRejectsUsernameWithSpaces() throws Exception {
+        register("luke ", "skywalker123")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.username").exists());
+    }
+
+    @Test
+    void registerRejectsPasswordLongerThan72BytesEvenIfUnder72Characters() throws Exception {
+        String password = "ñ".repeat(40); // 40 caracteres, 80 bytes en UTF-8
+
+        register("leia", password)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password").value("is too long (max 72 bytes)"));
     }
 
     @Test
@@ -66,12 +102,22 @@ class AuthControllerIntegrationTest {
 
     @Test
     void protectedRouteRejectsRequestWithoutToken() throws Exception {
-        mockMvc.perform(get("/people")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(PROTECTED_PATH)).andExpect(status().isUnauthorized());
     }
 
     @Test
     void protectedRouteRejectsInvalidToken() throws Exception {
-        mockMvc.perform(get("/people").header("Authorization", "Bearer not-a-jwt"))
+        mockMvc.perform(get(PROTECTED_PATH).header("Authorization", "Bearer not-a-jwt"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void protectedRouteRejectsExpiredToken() throws Exception {
+        Clock twoHoursAgo = Clock.fixed(Instant.now().minus(Duration.ofHours(2)), ZoneOffset.UTC);
+        JwtTokenProvider pastProvider = new JwtTokenProvider(jwtEncoder, authProperties, twoHoursAgo);
+        String expiredToken = pastProvider.issue(new User(UUID.randomUUID(), "luke", "hash")).value();
+
+        mockMvc.perform(get(PROTECTED_PATH).header("Authorization", "Bearer " + expiredToken))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -80,10 +126,9 @@ class AuthControllerIntegrationTest {
         String body = login("demo-test", "demo-test-pass").andReturn().getResponse().getContentAsString();
         String token = JsonPath.read(body, "$.accessToken");
 
-        // Todavía no hay endpoints de negocio: alcanza con verificar que pasa el filtro de seguridad.
-        mockMvc.perform(get("/people").header("Authorization", "Bearer " + token))
-                .andExpect(status().is(not(401)))
-                .andExpect(status().is(not(403)));
+        // 404 (y no 401) prueba que el request pasó el filtro de seguridad y llegó al dispatcher.
+        mockMvc.perform(get(PROTECTED_PATH).header("Authorization", "Bearer " + token))
+                .andExpect(status().isNotFound());
     }
 
     private ResultActions register(String username, String password) throws Exception {

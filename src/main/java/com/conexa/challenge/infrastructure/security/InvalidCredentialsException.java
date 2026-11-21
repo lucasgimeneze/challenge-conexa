@@ -2,7 +2,7 @@ package com.conexa.challenge.infrastructure.security;
 
 /**
  * Login fallido. Mismo mensaje si el usuario no existe o si la contraseña es incorrecta,
- * para no revelar qué usernames están registrados.
+ * para no darle al cliente detalle de cuál de los dos falló.
  */
 public class InvalidCredentialsException extends RuntimeException {
 
