@@ -16,7 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class AuthServiceTest {
 
     private static final AuthProperties PROPERTIES = new AuthProperties(
-            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofMinutes(15)));
+            new AuthProperties.Jwt(null, Duration.ofMinutes(15)));
 
     private final SecurityConfig securityConfig = new SecurityConfig();
     private final InMemoryUserRepository userRepository = new InMemoryUserRepository();

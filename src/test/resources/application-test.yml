@@ -1,6 +1,6 @@
+# Sin auth.jwt.secret: los tests usan la clave aleatoria efímera, igual que una corrida local sin JWT_SECRET.
 auth:
   jwt:
-    secret: test-secret-0123456789abcdef0123456789
     expiration: 15m
 
 swapi:

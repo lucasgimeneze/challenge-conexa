@@ -17,7 +17,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 class JwtTokenProviderTest {
 
     private static final AuthProperties PROPERTIES = new AuthProperties(
-            new AuthProperties.Jwt("test-secret-0123456789abcdef0123456789", Duration.ofHours(1)));
+            new AuthProperties.Jwt(null, Duration.ofHours(1)));
 
     private final SecurityConfig securityConfig = new SecurityConfig();
     private final SecretKey signingKey = securityConfig.jwtSigningKey(PROPERTIES);

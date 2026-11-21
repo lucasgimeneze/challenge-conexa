@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +14,7 @@ class SecurityConfigTest {
 
     @Test
     void usesConfiguredSecretAsSigningKey() {
-        String secret = "configured-secret-0123456789abcdef0123";
+        String secret = UUID.randomUUID().toString(); // 36 caracteres: cumple el mínimo de 32
 
         SecretKey key = securityConfig.jwtSigningKey(properties(secret));
 
