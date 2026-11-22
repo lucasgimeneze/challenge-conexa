@@ -1,7 +1,7 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.infrastructure.adapter.in.web;
 
-import com.conexa.challenge.domain.model.User;
-import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
+import com.conexa.challenge.application.service.AuthService;
+import com.conexa.challenge.domain.model.AccessToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +12,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,17 +32,18 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @Operation(summary = "Register a user")
-    @ApiResponse(responseCode = "201", description = "User created.")
+    @Operation(summary = "Register a user", description = "Creates the user. Then log in to get a token.")
+    @ApiResponse(responseCode = "201", description = "User created. No response body.")
     @ApiResponse(responseCode = "400", description = "Invalid username or password. `errors` maps each field to its message.",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "409", description = "The username is already taken.",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "429", description = "Too many requests from this IP. Includes `Retry-After`.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
-        User user = authService.register(request.username(), request.password());
-        return new RegisterResponse(user.id(), user.username());
+    public void register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request.username(), request.password());
     }
 
     @Operation(summary = "Log in", description = "Returns a bearer token to use in the `Authorization` header.")
@@ -51,6 +51,8 @@ public class AuthController {
     @ApiResponse(responseCode = "400", description = "Missing username or password.",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "401", description = "Invalid username or password.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "429", description = "Too many requests from this IP. Includes `Retry-After`.",
             content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
@@ -75,9 +77,6 @@ public class AuthController {
     public record LoginRequest(
             @NotBlank(message = "is required") String username,
             @NotBlank(message = "is required") String password) {
-    }
-
-    public record RegisterResponse(UUID id, String username) {
     }
 
     public record TokenResponse(String accessToken, String tokenType, long expiresIn) {

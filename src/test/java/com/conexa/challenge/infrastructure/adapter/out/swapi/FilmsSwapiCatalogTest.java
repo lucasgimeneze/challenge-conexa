@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.conexa.challenge.domain.model.Film;
 import com.conexa.challenge.domain.model.PageResult;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -29,8 +28,7 @@ class FilmsSwapiCatalogTest {
     @BeforeEach
     void setUp() {
         swapi.stubFor(get("/films").willReturn(json("films.json")));
-        SwapiProperties properties = new SwapiProperties(swapi.baseUrl(), Duration.ofSeconds(1), Duration.ofSeconds(1));
-        catalog = new FilmsSwapiCatalog(new SwapiClient(properties, new SwapiErrorTranslator()));
+        catalog = new FilmsSwapiCatalog(SwapiFixtures.client(swapi.baseUrl()));
     }
 
     @Test

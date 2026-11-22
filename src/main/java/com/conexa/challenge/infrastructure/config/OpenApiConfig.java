@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    public static final String BEARER_AUTH = "bearerAuth";
+    private static final String BEARER_AUTH = "bearerAuth";
 
     private static final String DESCRIPTION = """
             Lists People, Films, Starships and Vehicles from the [Star Wars API](https://www.swapi.tech), \

@@ -50,6 +50,7 @@ class OpenApiContractTest {
                 .andExpect(jsonPath(operation + ".responses['200'].content['*/*'].schema['$ref']").exists())
                 .andExpect(jsonPath(operation + ".responses['400'].content['application/problem+json']").exists())
                 .andExpect(jsonPath(operation + ".responses['401']").exists())
+                .andExpect(jsonPath(operation + ".responses['429']").exists())
                 .andExpect(jsonPath(operation + ".responses['502']").exists())
                 .andExpect(jsonPath(operation + ".responses['503']").exists())
                 .andExpect(jsonPath(operation + ".responses['504']").exists());
@@ -70,7 +71,8 @@ class OpenApiContractTest {
         apiDocs()
                 .andExpect(jsonPath("$.paths['/auth/login'].post.security").isEmpty())
                 .andExpect(jsonPath("$.paths['/auth/register'].post.security").isEmpty())
-                .andExpect(jsonPath("$.paths['/auth/register'].post.responses['409']").exists());
+                .andExpect(jsonPath("$.paths['/auth/register'].post.responses['409']").exists())
+                .andExpect(jsonPath("$.paths['/auth/login'].post.responses['429']").exists());
     }
 
     private ResultActions apiDocs() throws Exception {

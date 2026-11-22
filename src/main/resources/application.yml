@@ -8,10 +8,26 @@ spring:
     type: caffeine
     cache-names: swapi
     caffeine:
-      spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m}
+      # recordStats: Actuator registra métricas de la cache y sin estadísticas loguea un warning al arrancar.
+      spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m},recordStats
 
 server:
   port: ${SERVER_PORT:8080}
+
+# Solo el health check, sin detalles; no depende de SWAPI para que una caída externa no reinicie la app.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+# Fuera de una request (por ejemplo al arrancar) no hay correlationId: se omite en vez de mostrar "[] ".
+logging:
+  pattern:
+    correlation: '%replace([%X{correlationId}] ){"\[\] ", ""}'
 
 auth:
   jwt:
@@ -23,8 +39,28 @@ auth:
     secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:1h}
 
+rate-limit:
+  # Por IP: frena fuerza bruta contra el login y registros masivos.
+  auth:
+    limit: ${RATE_LIMIT_AUTH_LIMIT:10}
+    period: ${RATE_LIMIT_AUTH_PERIOD:1m}
+  # Por usuario: SWAPI permite 100 requests cada 15 minutos por IP; el 20 % de margen cubre las requests
+  # que nunca le llegan (errores de validación y respuestas desde la cache).
+  api:
+    limit: ${RATE_LIMIT_API_LIMIT:120}
+    period: ${RATE_LIMIT_API_PERIOD:15m}
+
 swapi:
   base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
   connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
   # Holgado a propósito: SWAPI suma 100 ms de demora por cada request después de la 5.ª en 15 minutos.
   read-timeout: ${SWAPI_READ_TIMEOUT:10s}
+  # Solo se reintentan fallas transitorias (conexión y 5xx), nunca timeouts, 429 ni respuestas inválidas.
+  retry:
+    max-attempts: ${SWAPI_RETRY_MAX_ATTEMPTS:3}
+    initial-backoff: ${SWAPI_RETRY_INITIAL_BACKOFF:200ms}
+  circuit-breaker:
+    sliding-window-size: ${SWAPI_CIRCUIT_WINDOW_SIZE:20}
+    minimum-calls: ${SWAPI_CIRCUIT_MINIMUM_CALLS:10}
+    failure-rate-threshold: ${SWAPI_CIRCUIT_FAILURE_RATE:50}
+    open-duration: ${SWAPI_CIRCUIT_OPEN_DURATION:30s}

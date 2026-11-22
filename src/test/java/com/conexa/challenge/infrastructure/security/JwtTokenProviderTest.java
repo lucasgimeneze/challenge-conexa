@@ -2,6 +2,7 @@ package com.conexa.challenge.infrastructure.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.conexa.challenge.domain.model.AccessToken;
 import com.conexa.challenge.domain.model.User;
 import java.time.Clock;
 import java.time.Duration;
@@ -30,7 +31,7 @@ class JwtTokenProviderTest {
                 securityConfig.jwtEncoder(signingKey), PROPERTIES, Clock.fixed(now, ZoneOffset.UTC));
         User user = new User(UUID.randomUUID(), "luke", "hash");
 
-        JwtTokenProvider.AccessToken token = provider.issue(user);
+        AccessToken token = provider.issue(user);
         Jwt decoded = decoder.decode(token.value());
 
         assertThat(decoded.getSubject()).isEqualTo(user.id().toString());

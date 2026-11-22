@@ -17,7 +17,7 @@ import org.springframework.web.client.RestClientException;
 
 /**
  * Sin {@code sync = true} en la cache: en Java 21 bloquearía los hilos portadores de los virtual threads
- * mientras se espera a SWAPI.
+ * mientras se espera a SWAPI. La cache queda por fuera de la resiliencia: un hit no pasa por retry ni circuito.
  */
 @Component
 public class SwapiClient {
@@ -26,6 +26,7 @@ public class SwapiClient {
 
     private final RestClient restClient;
     private final SwapiErrorTranslator errorTranslator;
+    private final SwapiResilience resilience;
 
     public SwapiClient(SwapiProperties properties, SwapiErrorTranslator errorTranslator) {
         this.restClient = RestClient.builder()
@@ -33,17 +34,18 @@ public class SwapiClient {
                 .requestFactory(requestFactory(properties))
                 .build();
         this.errorTranslator = errorTranslator;
+        this.resilience = new SwapiResilience(properties.retry(), properties.circuitBreaker());
     }
 
     @Cacheable("swapi")
     public <R> R fetch(ParameterizedTypeReference<R> responseType, String uriTemplate, Object... uriVariables) {
-        return request(responseType, uriTemplate, uriVariables)
+        return find(responseType, uriTemplate, uriVariables)
                 .orElseThrow(() -> new ExternalServiceException(INVALID_RESPONSE));
     }
 
     @Cacheable("swapi")
     public <R> Optional<R> find(ParameterizedTypeReference<R> responseType, String uriTemplate, Object... uriVariables) {
-        return request(responseType, uriTemplate, uriVariables);
+        return resilience.execute(() -> request(responseType, uriTemplate, uriVariables));
     }
 
     private <R> Optional<R> request(ParameterizedTypeReference<R> responseType, String uriTemplate, Object... uriVariables) {

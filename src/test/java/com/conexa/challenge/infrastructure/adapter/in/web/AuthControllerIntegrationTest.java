@@ -1,11 +1,14 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.infrastructure.adapter.in.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.conexa.challenge.domain.model.User;
+import com.conexa.challenge.infrastructure.security.AuthProperties;
+import com.conexa.challenge.infrastructure.security.JwtTokenProvider;
 import com.jayway.jsonpath.JsonPath;
 import java.time.Clock;
 import java.time.Duration;
@@ -41,13 +44,10 @@ class AuthControllerIntegrationTest {
     private AuthProperties authProperties;
 
     @Test
-    void registerReturnsCreatedWithoutExposingPassword() throws Exception {
+    void registerReturnsCreatedWithoutBody() throws Exception {
         register("han", "millennium123")
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty())
-                .andExpect(jsonPath("$.username").value("han"))
-                .andExpect(jsonPath("$.password").doesNotExist())
-                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+                .andExpect(content().string(""));
     }
 
     @Test

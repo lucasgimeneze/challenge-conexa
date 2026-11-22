@@ -9,6 +9,7 @@ public class ExternalServiceException extends RuntimeException {
         TIMEOUT("The Star Wars API did not respond in time"),
         UNAVAILABLE("The Star Wars API is unavailable"),
         RATE_LIMITED("The Star Wars API rate limit was exceeded"),
+        CIRCUIT_OPEN("The Star Wars API is failing repeatedly, try again later"),
         INVALID_RESPONSE("The Star Wars API returned an invalid response");
 
         private final String message;

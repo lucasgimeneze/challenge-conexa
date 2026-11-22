@@ -7,10 +7,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 public final class SwapiFixtures {
 
     private SwapiFixtures() {
+    }
+
+    public static SwapiProperties properties(String baseUrl) {
+        return properties(baseUrl, new SwapiProperties.CircuitBreakerProperties(100, 100, 50, Duration.ofSeconds(1)));
+    }
+
+    public static SwapiProperties properties(String baseUrl, SwapiProperties.CircuitBreakerProperties circuitBreaker) {
+        return new SwapiProperties(baseUrl, Duration.ofSeconds(1), Duration.ofMillis(500),
+                new SwapiProperties.RetryProperties(3, Duration.ofMillis(10)), circuitBreaker);
+    }
+
+    public static SwapiClient client(String baseUrl) {
+        return new SwapiClient(properties(baseUrl), new SwapiErrorTranslator());
     }
 
     public static ResponseDefinitionBuilder json(String fixture) {

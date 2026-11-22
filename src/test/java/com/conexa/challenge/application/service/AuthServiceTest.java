@@ -1,29 +1,23 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.conexa.challenge.domain.exception.InvalidCredentialsException;
 import com.conexa.challenge.domain.exception.UserAlreadyExistsException;
+import com.conexa.challenge.domain.model.AccessToken;
 import com.conexa.challenge.domain.model.User;
+import com.conexa.challenge.domain.port.out.TokenIssuer;
 import com.conexa.challenge.infrastructure.adapter.out.persistence.InMemoryUserRepository;
-import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
-import java.time.Clock;
-import java.time.Duration;
+import com.conexa.challenge.infrastructure.security.BCryptPasswordHasher;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthServiceTest {
 
-    private static final AuthProperties PROPERTIES = new AuthProperties(
-            new AuthProperties.Jwt(null, Duration.ofMinutes(15)));
-
-    private final SecurityConfig securityConfig = new SecurityConfig();
     private final InMemoryUserRepository userRepository = new InMemoryUserRepository();
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    private final JwtTokenProvider tokenProvider = new JwtTokenProvider(
-            securityConfig.jwtEncoder(securityConfig.jwtSigningKey(PROPERTIES)), PROPERTIES, Clock.systemUTC());
-    private final AuthService authService = new AuthService(userRepository, passwordEncoder, tokenProvider);
+    private final BCryptPasswordHasher passwordHasher = new BCryptPasswordHasher();
+    private final TokenIssuer tokenIssuer = user -> new AccessToken("token-for-" + user.username(), 900);
+    private final AuthService authService = new AuthService(userRepository, passwordHasher, tokenIssuer);
 
     @Test
     void registerAssignsIdAndStoresHashedPassword() {
@@ -31,7 +25,7 @@ class AuthServiceTest {
 
         assertThat(user.id()).isNotNull();
         assertThat(user.passwordHash()).isNotEqualTo("skywalker123");
-        assertThat(passwordEncoder.matches("skywalker123", user.passwordHash())).isTrue();
+        assertThat(passwordHasher.matches("skywalker123", user.passwordHash())).isTrue();
         assertThat(userRepository.findByUsername("luke")).contains(user);
     }
 
@@ -44,13 +38,12 @@ class AuthServiceTest {
     }
 
     @Test
-    void loginReturnsTokenForValidCredentials() {
+    void loginIssuesTokenForTheUserWithValidCredentials() {
         authService.register("luke", "skywalker123");
 
         AccessToken token = authService.login("luke", "skywalker123");
 
-        assertThat(token.value()).isNotBlank();
-        assertThat(token.expiresInSeconds()).isEqualTo(900);
+        assertThat(token).isEqualTo(new AccessToken("token-for-luke", 900));
     }
 
     @Test
