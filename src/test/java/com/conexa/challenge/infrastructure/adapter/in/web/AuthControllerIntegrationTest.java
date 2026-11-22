@@ -1,4 +1,4 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.infrastructure.adapter.in.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.conexa.challenge.domain.model.User;
+import com.conexa.challenge.infrastructure.security.AuthProperties;
+import com.conexa.challenge.infrastructure.security.JwtTokenProvider;
 import com.jayway.jsonpath.JsonPath;
 import java.time.Clock;
 import java.time.Duration;

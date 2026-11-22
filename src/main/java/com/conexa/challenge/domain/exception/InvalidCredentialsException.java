@@ -1,4 +1,4 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.domain.exception;
 
 /**
  * Mismo mensaje si el usuario no existe o si la contraseña es incorrecta,

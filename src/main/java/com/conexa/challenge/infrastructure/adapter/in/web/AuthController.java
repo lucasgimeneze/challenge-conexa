@@ -1,6 +1,7 @@
-package com.conexa.challenge.infrastructure.security;
+package com.conexa.challenge.infrastructure.adapter.in.web;
 
-import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
+import com.conexa.challenge.application.service.AuthService;
+import com.conexa.challenge.domain.model.AccessToken;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

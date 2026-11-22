@@ -204,10 +204,10 @@ com.conexa.challenge
 ├── domain/                       # modelos, puertos de salida y excepciones; sin frameworks
 ├── application/service/          # casos de uso
 └── infrastructure/
-    ├── adapter/in/web/           # controllers, validación, errores HTTP, correlationId
+    ├── adapter/in/web/           # controllers (catálogo y auth), validación, errores HTTP, correlationId
     ├── adapter/out/swapi/        # cliente de SWAPI, catálogos, DTOs y mapeo al dominio
     ├── adapter/out/persistence/  # usuarios en memoria
-    ├── security/                 # registro, login, JWT y rate limit
+    ├── security/                 # Spring Security, emisión de JWT, hashing BCrypt y rate limit
     └── config/                   # wiring y OpenAPI
 ```
 

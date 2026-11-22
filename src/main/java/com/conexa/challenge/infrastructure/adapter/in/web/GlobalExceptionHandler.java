@@ -1,8 +1,8 @@
 package com.conexa.challenge.infrastructure.adapter.in.web;
 
 import com.conexa.challenge.domain.exception.ExternalServiceException;
+import com.conexa.challenge.domain.exception.InvalidCredentialsException;
 import com.conexa.challenge.domain.exception.UserAlreadyExistsException;
-import com.conexa.challenge.infrastructure.security.InvalidCredentialsException;
 import com.conexa.challenge.infrastructure.security.RateLimitExceededException;
 import java.time.Duration;
 import java.util.Map;
