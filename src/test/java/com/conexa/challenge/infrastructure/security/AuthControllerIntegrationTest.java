@@ -27,8 +27,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles("test")
 class AuthControllerIntegrationTest {
 
-    // Ruta protegida cualquiera: todavía no hay endpoints de negocio.
-    private static final String PROTECTED_PATH = "/people";
+    // Ruta protegida inexistente: prueba el filtro de seguridad sin depender de SWAPI.
+    private static final String PROTECTED_PATH = "/not-a-resource";
     private static final String PASSWORD = "skywalker123";
 
     @Autowired
@@ -124,7 +124,9 @@ class AuthControllerIntegrationTest {
     @Test
     void protectedRouteRejectsInvalidToken() throws Exception {
         mockMvc.perform(get(PROTECTED_PATH).header("Authorization", "Bearer not-a-jwt"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.detail").value("A valid bearer token is required"));
     }
 
     @Test
