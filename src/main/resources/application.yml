@@ -23,6 +23,17 @@ auth:
     secret: ${JWT_SECRET:}
     expiration: ${JWT_EXPIRATION:1h}
 
+rate-limit:
+  # Por IP: frena fuerza bruta contra el login y registros masivos.
+  auth:
+    limit: ${RATE_LIMIT_AUTH_LIMIT:10}
+    period: ${RATE_LIMIT_AUTH_PERIOD:1m}
+  # Por usuario: SWAPI permite 100 requests cada 15 minutos por IP; el 20 % de margen cubre las requests
+  # que nunca le llegan (errores de validación y respuestas desde la cache).
+  api:
+    limit: ${RATE_LIMIT_API_LIMIT:120}
+    period: ${RATE_LIMIT_API_PERIOD:15m}
+
 swapi:
   base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
   connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}

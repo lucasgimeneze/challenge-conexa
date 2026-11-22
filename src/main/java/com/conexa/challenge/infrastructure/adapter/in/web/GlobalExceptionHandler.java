@@ -3,6 +3,7 @@ package com.conexa.challenge.infrastructure.adapter.in.web;
 import com.conexa.challenge.domain.exception.ExternalServiceException;
 import com.conexa.challenge.domain.exception.UserAlreadyExistsException;
 import com.conexa.challenge.infrastructure.security.InvalidCredentialsException;
+import com.conexa.challenge.infrastructure.security.RateLimitExceededException;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -42,6 +43,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
                 .body(problem);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    ResponseEntity<ProblemDetail> handleRateLimitExceeded(RateLimitExceededException ex) {
+        long retryAfterSeconds = Math.max(1, (long) Math.ceil(ex.retryAfter().toMillis() / 1000.0));
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+                .body(ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage()));
     }
 
     @ExceptionHandler(ExternalServiceException.class)

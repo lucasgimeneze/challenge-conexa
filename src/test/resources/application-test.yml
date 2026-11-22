@@ -3,6 +3,15 @@ auth:
   jwt:
     expiration: 15m
 
+# Los tests comparten IP y contexto: límites altos para no cruzarse. El rate limit se prueba aparte.
+rate-limit:
+  auth:
+    limit: 10000
+    period: 1m
+  api:
+    limit: 10000
+    period: 15m
+
 swapi:
   base-url: http://localhost:${wiremock.server.port:8089}/api
   connect-timeout: 1s
