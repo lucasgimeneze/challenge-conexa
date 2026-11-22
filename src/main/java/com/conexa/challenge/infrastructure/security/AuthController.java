@@ -2,18 +2,27 @@ package com.conexa.challenge.infrastructure.security;
 
 import com.conexa.challenge.domain.model.User;
 import com.conexa.challenge.infrastructure.security.JwtTokenProvider.AccessToken;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Auth", description = "User registration and login to obtain a bearer token")
+@SecurityRequirements
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -24,6 +33,12 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @Operation(summary = "Register a user")
+    @ApiResponse(responseCode = "201", description = "User created.")
+    @ApiResponse(responseCode = "400", description = "Invalid username or password. `errors` maps each field to its message.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "409", description = "The username is already taken.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
@@ -31,6 +46,12 @@ public class AuthController {
         return new RegisterResponse(user.id(), user.username());
     }
 
+    @Operation(summary = "Log in", description = "Returns a bearer token to use in the `Authorization` header.")
+    @ApiResponse(responseCode = "200", description = "Valid credentials.")
+    @ApiResponse(responseCode = "400", description = "Missing username or password.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "401", description = "Invalid username or password.",
+            content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         AccessToken token = authService.login(request.username(), request.password());
