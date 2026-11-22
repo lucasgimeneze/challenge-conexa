@@ -8,10 +8,24 @@ spring:
     type: caffeine
     cache-names: swapi
     caffeine:
-      spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m}
+      spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m},recordStats
 
 server:
   port: ${SERVER_PORT:8080}
+
+# Solo el health check, sin detalles; no depende de SWAPI para que una caída externa no reinicie la app.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  pattern:
+    correlation: "[%X{correlationId:-}] "
 
 auth:
   jwt:
