@@ -31,9 +31,7 @@ class SwapiClientTest {
             .options(wireMockConfig().dynamicPort())
             .build();
 
-    private final SwapiClient client = new SwapiClient(
-            new SwapiProperties(swapi.baseUrl(), Duration.ofSeconds(1), Duration.ofMillis(500)),
-            new SwapiErrorTranslator());
+    private final SwapiClient client = SwapiFixtures.client(swapi.baseUrl());
 
     @Test
     void slowResponseIsTimeout() {

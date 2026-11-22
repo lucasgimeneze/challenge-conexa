@@ -43,6 +43,8 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles("test")
 class StarWarsApiIntegrationTest {
 
+    private static final int RETRY_MAX_ATTEMPTS = 3;
+
     @RegisterExtension
     static final WireMockExtension swapi = WireMockExtension.newInstance()
             .options(wireMockConfig().dynamicPort())
@@ -240,7 +242,7 @@ class StarWarsApiIntegrationTest {
         stubPeoplePage();
         perform("/api/v1/people?size=2").andExpect(status().isOk());
 
-        swapi.verify(2, anyRequestedFor(anyUrl()));
+        swapi.verify(RETRY_MAX_ATTEMPTS + 1, anyRequestedFor(anyUrl()));
     }
 
     @Test

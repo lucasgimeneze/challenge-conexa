@@ -19,7 +19,8 @@ import org.springframework.http.ProblemDetail;
         content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
 @ApiResponse(responseCode = "502", description = "The Star Wars API failed or returned an invalid response.",
         content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
-@ApiResponse(responseCode = "503", description = "The Star Wars API rate limit was exceeded. May include `Retry-After`.",
+@ApiResponse(responseCode = "503",
+        description = "The Star Wars API rate limit was exceeded or it is failing repeatedly. Includes `Retry-After` when known.",
         content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))
 @ApiResponse(responseCode = "504", description = "The Star Wars API did not respond in time.",
         content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ProblemDetail.class)))

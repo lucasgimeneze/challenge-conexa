@@ -28,3 +28,12 @@ swapi:
   connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
   # Holgado a propósito: SWAPI suma 100 ms de demora por cada request después de la 5.ª en 15 minutos.
   read-timeout: ${SWAPI_READ_TIMEOUT:10s}
+  # Solo se reintentan fallas transitorias (conexión y 5xx), nunca timeouts, 429 ni respuestas inválidas.
+  retry:
+    max-attempts: ${SWAPI_RETRY_MAX_ATTEMPTS:3}
+    initial-backoff: ${SWAPI_RETRY_INITIAL_BACKOFF:200ms}
+  circuit-breaker:
+    sliding-window-size: ${SWAPI_CIRCUIT_WINDOW_SIZE:20}
+    minimum-calls: ${SWAPI_CIRCUIT_MINIMUM_CALLS:10}
+    failure-rate-threshold: ${SWAPI_CIRCUIT_FAILURE_RATE:50}
+    open-duration: ${SWAPI_CIRCUIT_OPEN_DURATION:30s}

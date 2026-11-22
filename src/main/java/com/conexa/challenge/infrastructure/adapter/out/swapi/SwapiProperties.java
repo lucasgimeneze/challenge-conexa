@@ -1,5 +1,8 @@
 package com.conexa.challenge.infrastructure.adapter.out.swapi;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
@@ -11,5 +14,19 @@ import org.springframework.validation.annotation.Validated;
 public record SwapiProperties(
         @NotBlank String baseUrl,
         @NotNull Duration connectTimeout,
-        @NotNull Duration readTimeout) {
+        @NotNull Duration readTimeout,
+        @NotNull @Valid Retry retry,
+        @NotNull @Valid CircuitBreaker circuitBreaker) {
+
+    public record Retry(
+            @Min(1) int maxAttempts,
+            @NotNull Duration initialBackoff) {
+    }
+
+    public record CircuitBreaker(
+            @Min(1) int slidingWindowSize,
+            @Min(1) int minimumCalls,
+            @Min(1) @Max(100) int failureRateThreshold,
+            @NotNull Duration openDuration) {
+    }
 }

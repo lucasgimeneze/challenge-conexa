@@ -7,3 +7,13 @@ swapi:
   base-url: http://localhost:${wiremock.server.port:8089}/api
   connect-timeout: 1s
   read-timeout: 1s
+  retry:
+    max-attempts: 3
+    initial-backoff: 10ms
+  # El contexto de Spring se comparte entre tests: con este mínimo el circuito nunca se abre por fallas
+  # simuladas en otros tests. El circuito se prueba aparte, con su propia configuración.
+  circuit-breaker:
+    sliding-window-size: 100
+    minimum-calls: 100
+    failure-rate-threshold: 50
+    open-duration: 1s

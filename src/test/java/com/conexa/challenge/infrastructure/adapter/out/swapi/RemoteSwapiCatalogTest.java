@@ -17,7 +17,6 @@ import com.conexa.challenge.infrastructure.adapter.out.swapi.dto.SwapiPersonProp
 import com.conexa.challenge.infrastructure.adapter.out.swapi.dto.SwapiStarshipProperties;
 import com.conexa.challenge.infrastructure.adapter.out.swapi.dto.SwapiVehicleProperties;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -151,7 +150,6 @@ class RemoteSwapiCatalogTest {
     }
 
     private static SwapiClient client() {
-        SwapiProperties properties = new SwapiProperties(swapi.baseUrl(), Duration.ofSeconds(1), Duration.ofSeconds(1));
-        return new SwapiClient(properties, new SwapiErrorTranslator());
+        return SwapiFixtures.client(swapi.baseUrl());
     }
 }

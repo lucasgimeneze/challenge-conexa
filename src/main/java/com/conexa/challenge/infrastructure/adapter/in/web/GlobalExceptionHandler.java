@@ -48,7 +48,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<ProblemDetail> handleExternalService(ExternalServiceException ex) {
         HttpStatus status = switch (ex.reason()) {
             case TIMEOUT -> HttpStatus.GATEWAY_TIMEOUT;
-            case RATE_LIMITED -> HttpStatus.SERVICE_UNAVAILABLE;
+            case RATE_LIMITED, CIRCUIT_OPEN -> HttpStatus.SERVICE_UNAVAILABLE;
             case UNAVAILABLE, INVALID_RESPONSE -> HttpStatus.BAD_GATEWAY;
         };
         ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
