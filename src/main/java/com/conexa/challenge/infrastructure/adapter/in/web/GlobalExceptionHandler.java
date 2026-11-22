@@ -4,6 +4,7 @@ import com.conexa.challenge.domain.exception.ExternalServiceException;
 import com.conexa.challenge.domain.exception.UserAlreadyExistsException;
 import com.conexa.challenge.infrastructure.security.InvalidCredentialsException;
 import com.conexa.challenge.infrastructure.security.RateLimitExceededException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -47,9 +48,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(RateLimitExceededException.class)
     ResponseEntity<ProblemDetail> handleRateLimitExceeded(RateLimitExceededException ex) {
-        long retryAfterSeconds = Math.max(1, (long) Math.ceil(ex.retryAfter().toMillis() / 1000.0));
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfterSeconds))
+                .header(HttpHeaders.RETRY_AFTER, retryAfterSeconds(ex.retryAfter()))
                 .body(ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage()));
     }
 
@@ -61,8 +61,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             case UNAVAILABLE, INVALID_RESPONSE -> HttpStatus.BAD_GATEWAY;
         };
         ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
-        ex.retryAfter().ifPresent(retryAfter ->
-                response.header(HttpHeaders.RETRY_AFTER, String.valueOf(retryAfter.toSeconds())));
+        ex.retryAfter().ifPresent(retryAfter -> response.header(HttpHeaders.RETRY_AFTER, retryAfterSeconds(retryAfter)));
         return response.body(ProblemDetail.forStatusAndDetail(status, ex.getMessage()));
     }
 
@@ -82,6 +81,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = ex.getBody();
         problem.setProperty("errors", errors);
         return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    // Retry-After va en segundos enteros: se redondea hacia arriba para no invitar a reintentar antes de tiempo.
+    private static String retryAfterSeconds(Duration retryAfter) {
+        return String.valueOf(Math.max(1, (retryAfter.toMillis() + 999) / 1000));
     }
 
     private static String messageOf(FieldError error) {

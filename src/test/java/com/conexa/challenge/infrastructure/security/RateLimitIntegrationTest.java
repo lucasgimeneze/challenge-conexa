@@ -58,7 +58,8 @@ class RateLimitIntegrationTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(header().exists("Retry-After"))
-                .andExpect(jsonPath("$.status").value(429));
+                .andExpect(jsonPath("$.status").value(429))
+                .andExpect(jsonPath("$.correlationId").isNotEmpty());
     }
 
     @Test

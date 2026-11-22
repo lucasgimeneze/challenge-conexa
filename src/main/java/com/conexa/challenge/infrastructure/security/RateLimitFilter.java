@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -20,22 +21,26 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 /**
  * Va después de validar el JWT: el catálogo se limita por usuario y una request sin token responde 401
  * sin consumir cupo. Auth se limita por IP porque todavía no hay usuario.
+ * Usa {@link AtomicRateLimiter} (paquete internal de Resilience4j) porque es la única API que expone cuánto
+ * falta para el próximo permiso, necesario para el header Retry-After.
  */
 class RateLimitFilter extends OncePerRequestFilter {
 
-    private static final Duration IDLE_LIMITER_EXPIRATION = Duration.ofHours(1);
     private static final int MAX_TRACKED_CLIENTS = 10_000;
 
-    private final RateLimitProperties properties;
+    private final RateLimiterConfig authConfig;
+    private final RateLimiterConfig apiConfig;
     private final HandlerExceptionResolver exceptionResolver;
-    private final Cache<String, AtomicRateLimiter> limiters = Caffeine.newBuilder()
-            .expireAfterAccess(IDLE_LIMITER_EXPIRATION)
-            .maximumSize(MAX_TRACKED_CLIENTS)
-            .build();
+    private final Cache<String, AtomicRateLimiter> limiters;
 
     RateLimitFilter(RateLimitProperties properties, HandlerExceptionResolver exceptionResolver) {
-        this.properties = properties;
+        this.authConfig = configOf(properties.auth());
+        this.apiConfig = configOf(properties.api());
         this.exceptionResolver = exceptionResolver;
+        this.limiters = Caffeine.newBuilder()
+                .expireAfterAccess(longest(properties.auth().period(), properties.api().period()))
+                .maximumSize(MAX_TRACKED_CLIENTS)
+                .build();
     }
 
     @Override
@@ -44,7 +49,9 @@ class RateLimitFilter extends OncePerRequestFilter {
         Optional<AtomicRateLimiter> limiter = limiterFor(request);
         if (limiter.isPresent() && !limiter.get().acquirePermission()) {
             Duration retryAfter = Duration.ofNanos(limiter.get().getDetailedMetrics().getNanosToWait());
-            exceptionResolver.resolveException(request, response, null, new RateLimitExceededException(retryAfter));
+            if (exceptionResolver.resolveException(request, response, null, new RateLimitExceededException(retryAfter)) == null) {
+                response.sendError(HttpStatus.TOO_MANY_REQUESTS.value());
+            }
             return;
         }
         chain.doFilter(request, response);
@@ -53,20 +60,28 @@ class RateLimitFilter extends OncePerRequestFilter {
     private Optional<AtomicRateLimiter> limiterFor(HttpServletRequest request) {
         String path = request.getRequestURI();
         if (path.startsWith("/auth/")) {
-            return Optional.of(limiter("auth:" + request.getRemoteAddr(), properties.auth()));
+            return Optional.of(limiter("auth:" + request.getRemoteAddr(), authConfig));
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (path.startsWith("/api/") && authentication instanceof JwtAuthenticationToken) {
-            return Optional.of(limiter("api:" + authentication.getName(), properties.api()));
+            return Optional.of(limiter("api:" + authentication.getName(), apiConfig));
         }
         return Optional.empty();
     }
 
-    private AtomicRateLimiter limiter(String key, RateLimitProperties.Limit limit) {
-        return limiters.get(key, name -> new AtomicRateLimiter(name, RateLimiterConfig.custom()
+    private AtomicRateLimiter limiter(String key, RateLimiterConfig config) {
+        return limiters.get(key, name -> new AtomicRateLimiter(name, config));
+    }
+
+    private static RateLimiterConfig configOf(RateLimitProperties.Limit limit) {
+        return RateLimiterConfig.custom()
                 .limitForPeriod(limit.limit())
                 .limitRefreshPeriod(limit.period())
                 .timeoutDuration(Duration.ZERO)
-                .build()));
+                .build();
+    }
+
+    private static Duration longest(Duration first, Duration second) {
+        return first.compareTo(second) >= 0 ? first : second;
     }
 }

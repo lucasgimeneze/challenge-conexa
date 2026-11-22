@@ -15,12 +15,12 @@ public final class SwapiFixtures {
     }
 
     public static SwapiProperties properties(String baseUrl) {
-        return properties(baseUrl, new SwapiProperties.CircuitBreaker(100, 100, 50, Duration.ofSeconds(1)));
+        return properties(baseUrl, new SwapiProperties.CircuitBreakerProperties(100, 100, 50, Duration.ofSeconds(1)));
     }
 
-    public static SwapiProperties properties(String baseUrl, SwapiProperties.CircuitBreaker circuitBreaker) {
+    public static SwapiProperties properties(String baseUrl, SwapiProperties.CircuitBreakerProperties circuitBreaker) {
         return new SwapiProperties(baseUrl, Duration.ofSeconds(1), Duration.ofMillis(500),
-                new SwapiProperties.Retry(3, Duration.ofMillis(10)), circuitBreaker);
+                new SwapiProperties.RetryProperties(3, Duration.ofMillis(10)), circuitBreaker);
     }
 
     public static SwapiClient client(String baseUrl) {

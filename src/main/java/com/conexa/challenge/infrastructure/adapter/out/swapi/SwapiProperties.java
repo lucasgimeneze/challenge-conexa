@@ -15,15 +15,15 @@ public record SwapiProperties(
         @NotBlank String baseUrl,
         @NotNull Duration connectTimeout,
         @NotNull Duration readTimeout,
-        @NotNull @Valid Retry retry,
-        @NotNull @Valid CircuitBreaker circuitBreaker) {
+        @NotNull @Valid RetryProperties retry,
+        @NotNull @Valid CircuitBreakerProperties circuitBreaker) {
 
-    public record Retry(
+    public record RetryProperties(
             @Min(1) int maxAttempts,
             @NotNull Duration initialBackoff) {
     }
 
-    public record CircuitBreaker(
+    public record CircuitBreakerProperties(
             @Min(1) int slidingWindowSize,
             @Min(1) int minimumCalls,
             @Min(1) @Max(100) int failureRateThreshold,

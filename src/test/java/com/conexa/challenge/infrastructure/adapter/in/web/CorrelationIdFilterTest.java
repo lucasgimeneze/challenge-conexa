@@ -1,7 +1,9 @@
 package com.conexa.challenge.infrastructure.adapter.in.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.servlet.ServletException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -50,6 +52,15 @@ class CorrelationIdFilterTest {
     @Test
     void clearsTheMdcAfterTheRequest() throws Exception {
         runFilter();
+
+        assertThat(MDC.get(CorrelationIdFilter.MDC_KEY)).isNull();
+    }
+
+    @Test
+    void clearsTheMdcEvenWhenTheRequestFails() {
+        assertThatThrownBy(() -> filter.doFilter(request, response, (req, res) -> {
+            throw new ServletException("boom");
+        })).isInstanceOf(ServletException.class);
 
         assertThat(MDC.get(CorrelationIdFilter.MDC_KEY)).isNull();
     }

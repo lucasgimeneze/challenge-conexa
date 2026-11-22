@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.conexa.challenge.domain.exception.ExternalServiceException;
 import com.conexa.challenge.domain.exception.ExternalServiceException.Reason;
 import java.time.Duration;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpHeaders;
@@ -37,5 +38,13 @@ class GlobalExceptionHandlerTest {
                 new ExternalServiceException(reason, Duration.ofSeconds(30), null));
 
         assertThat(response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("30");
+    }
+
+    @Test
+    void roundsSubSecondRetryAfterUp() {
+        ResponseEntity<ProblemDetail> response = handler.handleExternalService(
+                new ExternalServiceException(Reason.CIRCUIT_OPEN, Duration.ofMillis(500), null));
+
+        assertThat(response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("1");
     }
 }

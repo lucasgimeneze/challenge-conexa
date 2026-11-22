@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @ActiveProfiles("test")
 class StarWarsApiIntegrationTest {
 
-    private static final int RETRY_MAX_ATTEMPTS = 3;
+    private static final int RETRY_MAX_ATTEMPTS = 3; // swapi.retry.max-attempts en application-test.yml
 
     @RegisterExtension
     static final WireMockExtension swapi = WireMockExtension.newInstance()

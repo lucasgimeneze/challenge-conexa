@@ -97,7 +97,7 @@ class SwapiClientResilienceTest {
     }
 
     @Test
-    void closesTheCircuitWhenSwapiRecovers() throws InterruptedException {
+    void closesTheCircuitAfterSuccessfulTrialCalls() throws InterruptedException {
         SwapiClient client = clientWithCircuitOf(4);
         swapi.stubFor(get("/people").willReturn(serverError()));
         for (int i = 0; i < 4; i++) {
@@ -106,8 +106,31 @@ class SwapiClientResilienceTest {
 
         swapi.stubFor(get("/people").willReturn(okJson(EMPTY_RESULT)));
         Thread.sleep(OPEN_DURATION.plusMillis(100));
+        for (int i = 0; i < 3; i++) {
+            assertThat(client.fetch(PEOPLE, "/people").result()).isEmpty();
+        }
 
-        assertThat(client.fetch(PEOPLE, "/people").result()).isEmpty();
+        swapi.stubFor(get("/people").willReturn(serverError()));
+        assertFailsWith(Reason.UNAVAILABLE, () -> client.fetch(PEOPLE, "/people"));
+    }
+
+    @Test
+    void rateLimitsAndInvalidResponsesDoNotCountAsSuccesses() {
+        SwapiClient client = clientWithCircuitOf(4);
+        swapi.stubFor(get("/people").willReturn(serverError()));
+        assertFailsWith(Reason.UNAVAILABLE, () -> client.fetch(PEOPLE, "/people"));
+        assertFailsWith(Reason.UNAVAILABLE, () -> client.fetch(PEOPLE, "/people"));
+
+        swapi.stubFor(get("/people").willReturn(aResponse().withStatus(429)));
+        assertFailsWith(Reason.RATE_LIMITED, () -> client.fetch(PEOPLE, "/people"));
+        swapi.stubFor(get("/people").willReturn(okJson("{\"message\": \"ok\"}")));
+        assertFailsWith(Reason.INVALID_RESPONSE, () -> client.fetch(PEOPLE, "/people"));
+
+        swapi.stubFor(get("/people").willReturn(serverError()));
+        assertFailsWith(Reason.UNAVAILABLE, () -> client.fetch(PEOPLE, "/people"));
+        assertFailsWith(Reason.UNAVAILABLE, () -> client.fetch(PEOPLE, "/people"));
+
+        assertFailsWith(Reason.CIRCUIT_OPEN, () -> client.fetch(PEOPLE, "/people"));
     }
 
     @Test
@@ -121,7 +144,7 @@ class SwapiClientResilienceTest {
     }
 
     private static SwapiClient clientWithCircuitOf(int windowSize) {
-        SwapiProperties.CircuitBreaker circuit = new SwapiProperties.CircuitBreaker(windowSize, windowSize, 50, OPEN_DURATION);
+        var circuit = new SwapiProperties.CircuitBreakerProperties(windowSize, windowSize, 50, OPEN_DURATION);
         return new SwapiClient(SwapiFixtures.properties(swapi.baseUrl(), circuit), new SwapiErrorTranslator());
     }
 

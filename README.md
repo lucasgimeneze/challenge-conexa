@@ -19,7 +19,7 @@ Es una capa entre tus clientes y SWAPI que agrega:
 
 Los ejemplos usan `http://localhost:8080`; ver [Cómo correrlo](#cómo-correrlo).
 
-### 1. Registrarse
+### 1. Registro
 
 ```bash
 curl -X POST http://localhost:8080/auth/register \
@@ -32,7 +32,7 @@ curl -X POST http://localhost:8080/auth/register \
 - `username`: 3 a 50 caracteres (letras, números, `.`, `_` o `-`).
 - `password`: 8 a 72 caracteres ASCII imprimibles (sin acentos ni emojis).
 
-### 2. Obtener el token
+### 2. Login
 
 ```bash
 curl -X POST http://localhost:8080/auth/login \
@@ -45,6 +45,14 @@ curl -X POST http://localhost:8080/auth/login \
 ```
 
 El token vence a la hora (`expiresIn`, en segundos). Al vencer, se vuelve a hacer login.
+
+Para usarlo en los ejemplos siguientes:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "luke", "password": "skywalker123"}' | sed -E 's/.*"accessToken":"([^"]+)".*/\1/')
+```
 
 ### 3. Consultar los recursos
 
@@ -116,7 +124,7 @@ Todos los errores responden `application/problem+json`:
 | `409` | El username ya existe (registro) | Elegir otro username |
 | `429` | Se superó el rate limit | Esperar los segundos de `Retry-After` |
 | `502` | SWAPI falló o respondió algo inválido | Reintentar más tarde |
-| `503` | SWAPI limitó las llamadas o está fallando repetidamente | Esperar los segundos de `Retry-After` |
+| `503` | SWAPI limitó las llamadas o está fallando repetidamente | Esperar los segundos de `Retry-After`, si viene; si no, reintentar más tarde |
 | `504` | SWAPI no respondió a tiempo | Reintentar más tarde |
 | `500` | Error inesperado | Reportarlo con el `correlationId` |
 
@@ -130,6 +138,8 @@ Todos los errores responden `application/problem+json`:
 | `/api/**` | 120 requests cada 15 minutos | Usuario |
 
 El límite de `/api/**` acompaña al de SWAPI (100 requests cada 15 minutos) con un margen para los requests que nunca le llegan (errores de validación y respuestas desde la cache).
+
+Es una **ventana fija** por usuario o IP, que empieza con su primer request: al terminar la ventana el cupo se renueva completo.
 
 ### 7. Swagger
 
@@ -225,10 +235,15 @@ com.conexa.challenge
 
 ```bash
 docker build -t conexa-challenge .
-docker run -p 8080:8080 conexa-challenge
+docker run -d --name conexa -p 8080:8080 conexa-challenge
 ```
 
-En ambos casos la API queda en `http://localhost:8080` y el health check en `/actuator/health`.
+En ambos casos la API queda en `http://localhost:8080`. Para verificar que levantó:
+
+```bash
+curl http://localhost:8080/actuator/health     # {"status":"UP"}
+docker ps --filter name=conexa                 # con Docker: STATUS (healthy)
+```
 
 ## Configuración
 
@@ -272,4 +287,5 @@ Reporte de cobertura (JaCoCo): `target/site/jacoco/index.html`.
 - **Usuarios y rate limit en memoria:** se pierden al reiniciar y valen para una sola instancia. Con varias instancias harían falta una base de datos y un store compartido (por ejemplo Redis).
 - **El cupo de SWAPI es compartido:** todas las llamadas salen desde la IP del servidor, así que las 100 requests cada 15 minutos de SWAPI son para todos los usuarios juntos. Lo amortiguan la cache, el circuit breaker y el `503` con `Retry-After`.
 - **Rate limit por IP detrás de un proxy:** se usa la IP de la conexión. Si se despliega detrás de un proxy, hay que configurar `server.forward-headers-strategy` solo si el proxy es confiable (si no, `X-Forwarded-For` se podría falsear).
+- **Errores fuera de Spring MVC sin `correlationId`:** si el servidor rechaza un request antes de llegar a la aplicación (por ejemplo una URL malformada), la respuesta la arma el contenedor y no incluye `correlationId` ni formato `ProblemDetail`.
 - **Timeout leyendo el body:** si SWAPI deja de responder después de enviar los headers, el cliente HTTP del JDK no lo informa como timeout y la respuesta es `502` en lugar de `504`.

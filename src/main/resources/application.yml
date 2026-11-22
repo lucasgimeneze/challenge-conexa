@@ -8,6 +8,7 @@ spring:
     type: caffeine
     cache-names: swapi
     caffeine:
+      # recordStats: Actuator registra métricas de la cache y sin estadísticas loguea un warning al arrancar.
       spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m},recordStats
 
 server:
@@ -23,9 +24,10 @@ management:
     health:
       show-details: never
 
+# Fuera de una request (por ejemplo al arrancar) no hay correlationId: se omite en vez de mostrar "[] ".
 logging:
   pattern:
-    correlation: "[%X{correlationId:-}] "
+    correlation: '%replace([%X{correlationId}] ){"\[\] ", ""}'
 
 auth:
   jwt:
