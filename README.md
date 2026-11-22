@@ -27,7 +27,7 @@ curl -X POST http://localhost:8080/auth/register \
   -d '{"username": "luke", "password": "skywalker123"}'
 ```
 
-`201 Created` → `{"id": "…", "username": "luke"}`
+Responde `201 Created` sin body.
 
 - `username`: 3 a 50 caracteres (letras, números, `.`, `_` o `-`).
 - `password`: 8 a 72 caracteres ASCII imprimibles (sin acentos ni emojis).

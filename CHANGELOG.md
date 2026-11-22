@@ -13,6 +13,9 @@ Todos los cambios relevantes del proyecto. El formato sigue [Keep a Changelog](h
 - `Dockerfile` multi-stage con usuario sin privilegios y health check.
 - README con la guía de integración, diagramas del flujo y la configuración, y este CHANGELOG.
 
+### Cambiado
+- `POST /auth/register` responde `201 Created` sin body (antes devolvía `id` y `username`).
+
 ## [0.2.0] - 2026-11-22
 
 ### Agregado
