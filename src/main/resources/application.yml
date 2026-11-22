@@ -1,10 +1,14 @@
 spring:
   application:
     name: conexa-challenge
+  threads:
+    virtual:
+      enabled: true
   cache:
     type: caffeine
+    cache-names: swapi
     caffeine:
-      spec: ${CACHE_SPEC:maximumSize=500,expireAfterWrite=10m}
+      spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -22,4 +26,5 @@ auth:
 swapi:
   base-url: ${SWAPI_BASE_URL:https://www.swapi.tech/api}
   connect-timeout: ${SWAPI_CONNECT_TIMEOUT:3s}
-  read-timeout: ${SWAPI_READ_TIMEOUT:5s}
+  # Holgado a propósito: SWAPI suma 100 ms de demora por cada request después de la 5.ª en 15 minutos.
+  read-timeout: ${SWAPI_READ_TIMEOUT:10s}
