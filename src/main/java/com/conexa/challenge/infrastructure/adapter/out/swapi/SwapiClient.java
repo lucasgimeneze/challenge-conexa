@@ -18,6 +18,8 @@ import org.springframework.web.client.RestClientException;
 /**
  * Sin {@code sync = true} en la cache: en Java 21 bloquearía los hilos portadores de los virtual threads
  * mientras se espera a SWAPI. La cache queda por fuera de la resiliencia: un hit no pasa por retry ni circuito.
+ * Cada método tiene su cache porque la clave se arma solo con los argumentos: compartiéndola, un 404 que
+ * {@code find} guardó como vacío haría que {@code fetch} devuelva {@code null} en vez de fallar.
  */
 @Component
 public class SwapiClient {
@@ -37,13 +39,13 @@ public class SwapiClient {
         this.resilience = new SwapiResilience(properties.retry(), properties.circuitBreaker());
     }
 
-    @Cacheable("swapi")
+    @Cacheable("swapi-responses")
     public <R> R fetch(ParameterizedTypeReference<R> responseType, String uriTemplate, Object... uriVariables) {
         return find(responseType, uriTemplate, uriVariables)
                 .orElseThrow(() -> new ExternalServiceException(INVALID_RESPONSE));
     }
 
-    @Cacheable("swapi")
+    @Cacheable("swapi-lookups")
     public <R> Optional<R> find(ParameterizedTypeReference<R> responseType, String uriTemplate, Object... uriVariables) {
         return resilience.execute(() -> request(responseType, uriTemplate, uriVariables));
     }

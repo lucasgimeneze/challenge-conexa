@@ -9,6 +9,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -17,10 +19,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.conexa.challenge.domain.exception.ExternalServiceException;
 import com.conexa.challenge.domain.model.User;
+import com.conexa.challenge.infrastructure.adapter.out.swapi.SwapiClient;
 import com.conexa.challenge.infrastructure.security.JwtTokenProvider;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -64,11 +70,14 @@ class StarWarsApiIntegrationTest {
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private SwapiClient swapiClient;
+
     private String token;
 
     @BeforeEach
     void setUp() {
-        cacheManager.getCache("swapi").clear();
+        cacheManager.getCacheNames().forEach(name -> cacheManager.getCache(name).clear());
         token = tokenProvider.issue(new User(UUID.randomUUID(), "luke", "hash")).value();
     }
 
@@ -232,6 +241,17 @@ class StarWarsApiIntegrationTest {
         perform("/api/v1/people?size=2").andExpect(status().isOk());
 
         swapi.verify(1, anyRequestedFor(anyUrl()));
+    }
+
+    @Test
+    void notFoundCachedByFindIsNotReturnedByFetch() {
+        swapi.stubFor(WireMock.get("/api/people/9999").willReturn(json(404, "not-found.json")));
+        ParameterizedTypeReference<Map<String, Object>> type = new ParameterizedTypeReference<>() {
+        };
+
+        assertThat(swapiClient.find(type, "/people/{id}", 9999)).isEmpty();
+        assertThatThrownBy(() -> swapiClient.fetch(type, "/people/{id}", 9999))
+                .isInstanceOf(ExternalServiceException.class);
     }
 
     @Test
