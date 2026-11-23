@@ -1,0 +1,16 @@
+# Blueprint de Render (plan Free: 512 MB, 0.1 CPU). Se crea desde el dashboard: New > Blueprint > este repo.
+services:
+  - type: web
+    name: conexa-challenge
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: "8080"
+      # Con 0.1 CPU el primer handshake TLS contra SWAPI tarda ~8 s y no entra en el default de 3 s.
+      - key: SWAPI_CONNECT_TIMEOUT
+        value: 10s
+      # Render la genera una sola vez y la guarda: no se versiona y los tokens sobreviven a los reinicios.
+      - key: JWT_SECRET
+        generateValue: true

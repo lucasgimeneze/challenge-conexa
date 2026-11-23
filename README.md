@@ -245,6 +245,10 @@ curl http://localhost:8080/actuator/health     # {"status":"UP"}
 docker ps --filter name=conexa                 # con Docker: STATUS (healthy)
 ```
 
+### En Render
+
+[`render.yaml`](render.yaml) describe el servicio (plan Free, Docker, health check y variables). En Render: **New > Blueprint**, elegir este repo y confirmar. `JWT_SECRET` la genera Render una sola vez, así que no se versiona y los tokens siguen valiendo después de un reinicio.
+
 ## Configuración
 
 Todo se configura con variables de entorno; ninguna es obligatoria.
@@ -266,6 +270,7 @@ Todo se configura con variables de entorno; ninguna es obligatoria.
 | `SWAPI_CIRCUIT_OPEN_DURATION` | `30s` | Tiempo que el circuito queda abierto |
 | `RATE_LIMIT_AUTH_LIMIT` / `RATE_LIMIT_AUTH_PERIOD` | `10` / `1m` | Límite de `/auth/**` por IP |
 | `RATE_LIMIT_API_LIMIT` / `RATE_LIMIT_API_PERIOD` | `120` / `15m` | Límite de `/api/**` por usuario |
+| `JAVA_TOOL_OPTIONS` | `-XX:MaxRAMPercentage=60` | Opciones de la JVM (solo en la imagen Docker) |
 
 **`JWT_SECRET`:** si no se define, la app genera una clave aleatoria al arrancar y lo avisa en el log. Alcanza para probarla, pero los tokens dejan de valer al reiniciar. En un entorno real la clave vive en un gestor de secretos (AWS Secrets Manager, Vault, Kubernetes Secret o los secrets del pipeline) y se inyecta como variable de entorno: `docker run -e JWT_SECRET=… conexa-challenge`.
 
