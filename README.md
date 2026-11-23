@@ -137,7 +137,7 @@ Todos los errores responden `application/problem+json`:
 | `504` | SWAPI no respondió a tiempo | Reintentar más tarde |
 | `500` | Error inesperado | Reportarlo con el `correlationId` |
 
-**`correlationId`:** cada respuesta trae el header `X-Correlation-Id` (también en el body de los errores). Podés enviar el tuyo en ese header (letras, números y `-`, hasta 64 caracteres) para seguir la request en los logs.
+**`correlationId`:** cada respuesta trae el header `X-Correlation-Id` (también en el body de los errores). Podés enviar el tuyo en ese header (letras, números y `-`, hasta 64 caracteres) para seguir la request en los logs. Toda request queda registrada en una línea de access log con su `correlationId` (método, path, status, duración e IP; nunca body ni headers), así que cualquier id reportado se puede rastrear.
 
 ### 6. Rate limit
 
@@ -289,7 +289,7 @@ Todo se configura con variables de entorno; ninguna es obligatoria.
 ./mvnw verify
 ```
 
-- **Unitarios:** reglas de filtrado y paginación, traducción de errores, mapeo de errores a HTTP y el filtro de `correlationId`.
+- **Unitarios:** reglas de filtrado y paginación, traducción de errores, mapeo de errores a HTTP y los filtros de `correlationId` y access log.
 - **Adapter con WireMock:** respuestas reales de SWAPI como fixtures, cada falla posible, reintentos y circuit breaker.
 - **End-to-end (MockMvc + WireMock):** token → endpoint → JSON, validaciones, errores, cache, rate limit, health y correlationId.
 - **Contrato de OpenAPI:** verifica que la documentación publicada coincida con la API.

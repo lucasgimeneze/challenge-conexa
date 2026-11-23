@@ -1,5 +1,6 @@
 package com.conexa.challenge.infrastructure.adapter.in.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -10,8 +11,11 @@ import com.conexa.challenge.domain.model.User;
 import com.conexa.challenge.infrastructure.security.JwtTokenProvider;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(OutputCaptureExtension.class)
 class ObservabilityIntegrationTest {
 
     @Autowired
@@ -33,6 +38,14 @@ class ObservabilityIntegrationTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(header().string(CorrelationIdFilter.HEADER, "trace-123"))
                 .andExpect(jsonPath("$.correlationId").value("trace-123"));
+    }
+
+    @Test
+    void accessLogRecordsRejectedRequestsWithTheirCorrelationId(CapturedOutput output) throws Exception {
+        mockMvc.perform(get("/api/v1/people").header(CorrelationIdFilter.HEADER, "trace-log"))
+                .andExpect(status().isUnauthorized());
+
+        assertThat(output).containsPattern("\\[trace-log\\].*GET /api/v1/people 401");
     }
 
     @Test
