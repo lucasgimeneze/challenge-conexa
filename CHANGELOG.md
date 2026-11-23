@@ -2,7 +2,12 @@
 
 Todos los cambios relevantes del proyecto. El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el versionado, [Semantic Versioning](https://semver.org/lang/es/).
 
-## [0.3.0] - Sin publicar
+## [0.3.1] - Sin publicar
+
+### Corregido
+- Las búsquedas por id y los listados de SWAPI usan caches separadas: un 404 cacheado por una búsqueda ya no puede llegar como respuesta vacía a un listado con la misma URI.
+
+## [0.3.0] - 2026-11-22
 
 ### Agregado
 - Reintentos ante fallas transitorias de SWAPI (conexión y 5xx) con backoff exponencial y jitter.
@@ -37,6 +42,7 @@ Todos los cambios relevantes del proyecto. El formato sigue [Keep a Changelog](h
 - Autenticación JWT (HS256) en todas las rutas de negocio.
 - Errores en formato `ProblemDetail` con detalle por campo.
 
-[0.3.0]: https://github.com/lucasgimeneze/challenge-conexa/compare/843ffed...HEAD
+[0.3.1]: https://github.com/lucasgimeneze/challenge-conexa/compare/77d268d...HEAD
+[0.3.0]: https://github.com/lucasgimeneze/challenge-conexa/compare/843ffed...77d268d
 [0.2.0]: https://github.com/lucasgimeneze/challenge-conexa/compare/d454616...843ffed
 [0.1.0]: https://github.com/lucasgimeneze/challenge-conexa/commits/d454616

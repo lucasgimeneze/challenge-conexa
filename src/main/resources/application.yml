@@ -6,9 +6,10 @@ spring:
       enabled: true
   cache:
     type: caffeine
-    cache-names: swapi
+    cache-names: swapi-responses, swapi-lookups
     caffeine:
-      # recordStats: Actuator registra métricas de la cache y sin estadísticas loguea un warning al arrancar.
+      # Aplica a cada cache por separado. recordStats: Actuator registra métricas de la cache y sin
+      # estadísticas loguea un warning al arrancar.
       spec: maximumSize=500,expireAfterWrite=${SWAPI_CACHE_TTL:10m},recordStats
 
 server:
