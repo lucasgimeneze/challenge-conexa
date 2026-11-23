@@ -4,6 +4,10 @@ Todos los cambios relevantes del proyecto. El formato sigue [Keep a Changelog](h
 
 ## [0.3.1] - Sin publicar
 
+### Agregado
+- Deploy en Render (plan gratuito), descripto en `render.yaml`: https://challenge-conexa.onrender.com
+- Memoria de la JVM configurable con `JAVA_TOOL_OPTIONS` (60 % de la RAM del contenedor por defecto).
+
 ### Corregido
 - Las búsquedas por id y los listados de SWAPI usan caches separadas: un 404 cacheado por una búsqueda ya no puede llegar como respuesta vacía a un listado con la misma URI.
 

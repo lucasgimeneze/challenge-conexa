@@ -4,6 +4,7 @@ services:
     name: conexa-challenge
     runtime: docker
     plan: free
+    region: virginia
     healthCheckPath: /actuator/health
     envVars:
       - key: PORT
