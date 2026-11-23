@@ -7,8 +7,8 @@ Todos los cambios relevantes del proyecto. El formato sigue [Keep a Changelog](h
 ### Agregado
 - Deploy en Render (plan gratuito), descripto en `render.yaml`: https://challenge-conexa.onrender.com
 - Memoria de la JVM configurable con `JAVA_TOOL_OPTIONS` (60 % de la RAM del contenedor por defecto).
-
 ### Corregido
+- Swagger documenta el body de error tal como lo devuelve la API (`title`, `status`, `detail`, `errors` y `correlationId` en la raíz), en lugar del schema genérico de `ProblemDetail`.
 - Las búsquedas por id y los listados de SWAPI usan caches separadas: un 404 cacheado por una búsqueda ya no puede llegar como respuesta vacía a un listado con la misma URI.
 
 ## [0.3.0] - 2026-11-22

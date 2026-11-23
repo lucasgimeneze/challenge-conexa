@@ -62,8 +62,24 @@ class OpenApiContractTest {
                 .andExpect(jsonPath("$.components.schemas.Person.properties.birthYear").exists())
                 .andExpect(jsonPath("$.components.schemas.Film.properties.name").exists())
                 .andExpect(jsonPath("$.components.schemas.Film.properties.title").doesNotExist())
-                .andExpect(jsonPath("$.components.schemas.Starship.properties.maxAtmosphericSpeed").exists())
-                .andExpect(jsonPath("$.components.schemas.ProblemDetail").exists());
+                .andExpect(jsonPath("$.components.schemas.Starship.properties.maxAtmosphericSpeed").exists());
+    }
+
+    @Test
+    void documentsTheErrorBodyAsTheApiReturnsIt() throws Exception {
+        String problem = "$.components.schemas.ProblemDetail";
+
+        apiDocs()
+                .andExpect(jsonPath(problem + ".properties.title").exists())
+                .andExpect(jsonPath(problem + ".properties.status").exists())
+                .andExpect(jsonPath(problem + ".properties.detail").exists())
+                .andExpect(jsonPath(problem + ".properties.errors.additionalProperties.type").value("string"))
+                .andExpect(jsonPath(problem + ".properties.correlationId").exists())
+                .andExpect(jsonPath(problem + ".properties.properties").doesNotExist())
+                .andExpect(jsonPath(problem + ".properties.type").doesNotExist())
+                .andExpect(jsonPath(problem + ".properties.instance").doesNotExist())
+                .andExpect(jsonPath(problem + ".required").value(
+                        containsInAnyOrder("title", "status", "detail", "correlationId")));
     }
 
     @Test
